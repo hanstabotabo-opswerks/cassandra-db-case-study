@@ -1,0 +1,37 @@
+site_name: OpsWerks Hub by Data Lake
+theme:
+  name: material  # Modern theme
+  palette:
+    primary: green
+    accent: lime  # You can adjust to lighter greens if needed
+  logo: images/opswerkslogo.png  # Add the logo here
+extra_css:
+  - extra.css
+markdown_extensions:
+  - toc:
+      permalink: true
+nav:
+  - Introduction: introduction.md
+  - Target Audience: audience.md
+  - Solution Description:
+      - Summary: solution.md
+      - Architecture Diagram: architecture.md
+  - Tools and Technologies: tools.md
+  - Workflow Visualization: workflow.md
+  - Features: features.md
+  - Runbooks:
+      - Pre-Requisites: prereq.md
+      - Installation:
+          - CassandraDB: cassandra.md
+          - OOM Error: OOM.md 
+          - Jenkins: jenkins.md
+          - SplunkOperator:
+              - Common Error: splunkoperatorerror.md
+          - SplunkOTEL:
+              - Common Error: splunkotelerror.md
+          - Prometheus:
+              - Common Error: prometheuserror.md
+      - How to use: stepbystep.md
+      - Maintenace: maintain.md
+  - Conclusion: conclusion.md
+

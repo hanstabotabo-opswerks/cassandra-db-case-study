@@ -1,0 +1,223 @@
+{
+    "visualizations": {
+        "viz_LQbNQsbO": {
+            "type": "splunk.bar",
+            "options": {},
+            "dataSources": {
+                "primary": "ds_N8wbhJvE"
+            },
+            "context": {},
+            "containerOptions": {},
+            "showProgressBar": false,
+            "showLastUpdated": false
+        },
+        "viz_7oPT4EGk": {
+            "type": "splunk.bar",
+            "options": {},
+            "dataSources": {
+                "primary": "ds_Jn7qxwHr"
+            },
+            "context": {},
+            "containerOptions": {},
+            "showProgressBar": false,
+            "showLastUpdated": false
+        },
+        "viz_Wmm4m8fy": {
+            "type": "splunk.line",
+            "options": {},
+            "dataSources": {
+                "primary": "ds_r27bGZgy"
+            }
+        },
+        "viz_ZqwQqu6V": {
+            "type": "splunk.line",
+            "options": {},
+            "dataSources": {
+                "primary": "ds_MM5cQ6eM"
+            }
+        },
+        "viz_sUpwwF5e": {
+            "type": "splunk.line",
+            "options": {},
+            "dataSources": {
+                "primary": "ds_ImYVpIuG"
+            }
+        },
+        "viz_vxjGO7fm": {
+            "type": "splunk.line",
+            "options": {},
+            "dataSources": {
+                "primary": "ds_io2O7Atc"
+            }
+        },
+        "viz_UgNmq46A": {
+            "type": "splunk.line",
+            "options": {},
+            "dataSources": {
+                "primary": "ds_YYjvRN7v"
+            },
+            "context": {},
+            "containerOptions": {},
+            "showProgressBar": false,
+            "showLastUpdated": false
+        }
+    },
+    "dataSources": {
+        "ds_N8wbhJvE": {
+            "type": "ds.search",
+            "options": {
+                "query": "index=\"k8s_events\" cassandra write\r\n| rex \"Write Throughput = (?<write_throughput>\\d+\\.?\\d*)\\s*(?<unit>B|KiB)\"\r\n| eval write_throughput_bytes = if(unit=\"KiB\", write_throughput * 1024, write_throughput)\r\n| table _time, write_throughput_bytes\r\n| rename write_throughput_bytes as \"Write Throughput of the CassandraDB Value in B/s\""
+            },
+            "name": "Search_1"
+        },
+        "ds_Jn7qxwHr": {
+            "type": "ds.search",
+            "options": {
+                "query": "index=\"k8s_events\" cassandra write AND read\n| rex \"Read Throughput = (?<read_throughput>\\d+\\.?\\d*)\\s*(?<unit>B|KiB)\"\n| eval read_throughput_bytes = if(unit=\"KiB\", read_throughput * 1024, read_throughput)\n| table _time, read_throughput_bytes\n| rename read_throughput_bytes as \"Read Throughput of the CassandraDB Value in B/s\""
+            },
+            "name": "Search_2"
+        },
+        "ds_r27bGZgy": {
+            "type": "ds.search",
+            "options": {
+                "query": "index=\"k8s_events\" method=* \r\n| regex method=\"^[A-Z]+$\" \r\n| timechart span=1m count as HTTP_Request"
+            },
+            "name": "Search_3"
+        },
+        "ds_MM5cQ6eM": {
+            "type": "ds.search",
+            "options": {
+                "query": "index=\"k8s_events\" time\r\n| rex \"duration=(?<duration>\\d+(\\.\\d+)?)(µs|ms)\"\r\n| eval duration_in_ms=if(like(duration, \"%µs\"), duration/1000, duration)\r\n| timechart span=1m avg(duration_in_ms) as Average_Duration_of_http_Request"
+            },
+            "name": "Search_4"
+        },
+        "ds_ImYVpIuG": {
+            "type": "ds.search",
+            "options": {
+                "query": "index=\"k8s_events\" source=\"/var/log/pods/*\" status=\"down\"\r\n| timechart count as Down_pods\r\n"
+            },
+            "name": "Search_5"
+        },
+        "ds_io2O7Atc": {
+            "type": "ds.search",
+            "options": {
+                "query": "index=\"k8s_events\" sourcetype=\"kube:container:*\" status=\"down\"\n| timechart count as Down_containers"
+            },
+            "name": "Search_6"
+        },
+        "ds_YYjvRN7v": {
+            "type": "ds.search",
+            "options": {
+                "query": "index=\"k8s_events\" memory used\n| rex field=_raw \"used\\s+=\\s+(?<used_memory>[0-9]+)\\([^\\)]+\\)\"\n| timechart span=5m sum(used_memory)"
+            },
+            "name": "Search_7"
+        }
+    },
+    "defaults": {
+        "dataSources": {
+            "ds.search": {
+                "options": {
+                    "queryParameters": {
+                        "latest": "$global_time.latest$",
+                        "earliest": "$global_time.earliest$"
+                    }
+                }
+            }
+        }
+    },
+    "inputs": {
+        "input_global_trp": {
+            "type": "input.timerange",
+            "options": {
+                "token": "global_time",
+                "defaultValue": "-24h@h,now"
+            },
+            "title": "Global Time Range"
+        }
+    },
+    "layout": {
+        "type": "absolute",
+        "options": {
+            "width": 1440,
+            "height": 960,
+            "display": "auto"
+        },
+        "structure": [
+            {
+                "item": "viz_LQbNQsbO",
+                "type": "block",
+                "position": {
+                    "x": 20,
+                    "y": 40,
+                    "w": 610,
+                    "h": 190
+                }
+            },
+            {
+                "item": "viz_7oPT4EGk",
+                "type": "block",
+                "position": {
+                    "x": 20,
+                    "y": 240,
+                    "w": 610,
+                    "h": 190
+                }
+            },
+            {
+                "item": "viz_Wmm4m8fy",
+                "type": "block",
+                "position": {
+                    "x": 650,
+                    "y": 40,
+                    "w": 330,
+                    "h": 390
+                }
+            },
+            {
+                "item": "viz_ZqwQqu6V",
+                "type": "block",
+                "position": {
+                    "x": 1000,
+                    "y": 40,
+                    "w": 380,
+                    "h": 390
+                }
+            },
+            {
+                "item": "viz_sUpwwF5e",
+                "type": "block",
+                "position": {
+                    "x": 20,
+                    "y": 450,
+                    "w": 480,
+                    "h": 430
+                }
+            },
+            {
+                "item": "viz_vxjGO7fm",
+                "type": "block",
+                "position": {
+                    "x": 520,
+                    "y": 450,
+                    "w": 410,
+                    "h": 430
+                }
+            },
+            {
+                "item": "viz_UgNmq46A",
+                "type": "block",
+                "position": {
+                    "x": 950,
+                    "y": 460,
+                    "w": 430,
+                    "h": 420
+                }
+            }
+        ],
+        "globalInputs": [
+            "input_global_trp"
+        ]
+    },
+    "description": "",
+    "title": "SRE_Dashboard_Datalake"
+}

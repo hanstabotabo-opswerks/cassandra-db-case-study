@@ -1,0 +1,193 @@
+# Blue Deployment for Development
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opswerks-hub-blue
+  namespace: dev
+  labels:
+    app: opswerks-hub
+    version: blue
+spec:
+  replicas: 1
+  selector:
+    matchLabels: 
+      app: opswerks-hub
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: opswerks-hub
+        version: blue
+    spec:
+      containers:
+      - name: opswerks-hub
+        image: romeofrancobarro/opswerks-hub:dev
+        ports:
+        - containerPort: 80
+      nodeSelector:
+        kubernetes.io/hostname: "lke238246-370358-3d2bde670000"
+
+---
+
+# Green Deployment for Development
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opswerks-hub-green
+  namespace: dev
+  labels:
+    app: opswerks-hub
+    version: green
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: opswerks-hub
+      version: green
+  template:
+    metadata:
+      labels:
+        app: opswerks-hub
+        version: green
+    spec:
+      containers:
+      - name: opswerks-hub
+        image: romeofrancobarro/opswerks-hub:dev
+        ports:
+        - containerPort: 80
+      nodeSelector:
+        kubernetes.io/hostname: "lke238246-370358-3d2bde670000"
+
+---
+
+# Blue-Green Service for Development
+apiVersion: v1
+kind: Service
+metadata:
+  name: opswerks-hub-service
+  namespace: dev
+  labels: 
+    frontend: opswerks-hub-frontend-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: opswerks-hub
+    version: blue  # Active version
+  ports:
+  - port: 80
+    targetPort: 80
+
+---
+
+# Backend Deployment for Development
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opswerks-hub-backend
+  namespace: dev
+  labels:
+    app: opswerks-hub-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: opswerks-hub-backend
+  template:
+    metadata:
+      labels:
+        app: opswerks-hub-backend
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: "lke238246-370358-3d2bde670000"
+      containers:
+      - name: opswerks-hub-backend
+        image: romeofrancobarro/opswerks-hub-backend:dev
+        ports:
+        - containerPort: 5000
+        env:
+        - name: NODE_ENV
+          value: "development"
+        
+
+---
+
+# Backend Service for Development
+apiVersion: v1
+kind: Service
+metadata:
+  name: opswerks-hub-backend-service
+  namespace: dev
+  labels: 
+    backend: opswerks-hub-backend-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: opswerks-hub-backend
+  ports:
+  - port: 5000
+    targetPort: 5000
+
+---
+
+# Cassandra StatefulSet for Development
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: opswerks-hub-database
+  namespace: dev
+  labels:
+    app: opswerks-hub-database
+spec:
+  serviceName: opswerks-hub-database-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: opswerks-hub-database
+  template:
+    metadata:
+      labels:
+        app: opswerks-hub-database
+    spec:
+      containers:
+      - name: opswerks-hub-database
+        image: cassandra:latest
+        ports:
+        - containerPort: 9042
+        env:
+        - name: CASSANDRA_SEEDS
+          value: "opswerks-hub-database-0.opswerks-hub-database-service.dev.svc.cluster.local"
+        - name: CASSANDRA_CLUSTER_NAME
+          value: "OpsWerksHubDatabaseCluster"
+        volumeMounts:
+        - name: cassandra-data
+          mountPath: /var/lib/cassandra
+      nodeSelector:
+        kubernetes.io/hostname: "lke238246-370358-3d2bde670000"
+  volumeClaimTemplates:
+  - metadata:
+      name: cassandra-data
+    spec:
+      accessModes: 
+        - ReadWriteOnce
+      resources:
+        requests:
+          memory: "512Mi"
+          cpu: "250m"
+        limits:
+          memory: "1Gi"
+          cpu: "500m"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: opswerks-hub-database-service
+  namespace: dev
+spec:
+  clusterIP: None
+  selector:
+    app: opswerks-hub-database
+  ports:
+  - port: 9042
+    targetPort: 9042
